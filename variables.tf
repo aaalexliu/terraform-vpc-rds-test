@@ -1,5 +1,11 @@
 # Input variable definitions
 
+variable "region" {
+  description = "Region to deploy to"
+  type        = string
+  default     = "us-east-1"
+}
+
 variable "vpc_name" {
   description = "Name of VPC"
   type        = string
@@ -22,6 +28,12 @@ variable "vpc_private_subnets" {
   description = "Private subnets for VPC"
   type        = list(string)
   default     = ["10.0.0.0/24", "10.0.1.0/24"]
+}
+
+variable "vpc_database_subnets" {
+  description = "Database subnets for VPC"
+  type = list(string)
+  default = ["20.0.11.0/24", "20.0.12.0/24"]
 }
 
 variable "vpc_public_subnets" {
