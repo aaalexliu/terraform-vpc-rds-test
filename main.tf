@@ -116,6 +116,6 @@ module "rds" {
 
   final_snapshot_identifier = "test-postgres-db"
 
-  family = "default.postgres12"
+  family = "postgres12"
   major_engine_version = "12"
 }
