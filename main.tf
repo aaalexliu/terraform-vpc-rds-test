@@ -17,8 +17,6 @@ module "vpc" {
   private_subnets  = var.vpc_private_subnets
   database_subnets = var.vpc_database_subnets
   public_subnets   = var.vpc_public_subnets
-
-  create_database_subnet_group = true
   
   enable_nat_gateway = true
   single_nat_gateway = true
@@ -105,14 +103,19 @@ module "rds" {
 
   vpc_security_group_ids = [module.postgresql_sg.this_security_group_id]
 
+  db_subnet_group_name	= module.vpc.database_subnet_group
+
   maintenance_window = "Mon:00:00-Mon:03:00"
   backup_window      = "03:00-06:00"
 
   enabled_cloudwatch_logs_exports = ["postgresql", "upgrade"]
 
-  subnets_ids = module.vpc.database_subnets
+  # subnets_ids = module.vpc.database_subnets
 
   publicly_accessible = true
 
   final_snapshot_identifier = "test-postgres-db"
+
+  family = "default.postgres12"
+  major_engine_version = "12"
 }
