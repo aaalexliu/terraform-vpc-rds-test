@@ -1,4 +1,7 @@
 
+provider "aws" {
+  region = var.region
+}
 
 
 module "vpc" {
@@ -6,14 +9,14 @@ module "vpc" {
   version = "2.38.0"
   # insert the 12 required variables here
 
-  name = "test-db-vpc"
+  name = var.vpc_name
 
-  cidr = "20.0.0.0/16"
+  cidr = var.vpc_cidr
 
-  azs              = ["us-east-1a", "us-east-1b", "us-east-1c"]
-  private_subnets  = ["20.0.1.0/24", "20.0.2.0/24"]
-  database_subnets = ["20.0.11.0/24", "20.0.12.0/24"]
-  public_subnets   = ["20.0.21.0/24", "20.0.22.0/24"]
+  azs              = var.vpc_azs
+  private_subnets  = var.vpc_private_subnets
+  database_subnets = var.vpc_database_subnets
+  public_subnets   = var.vpc_public_subnets
 
   create_database_subnet_group = true
   
@@ -28,15 +31,53 @@ module "vpc" {
   create_flow_log_cloudwatch_log_group = true
   create_flow_log_cloudwatch_iam_role  = true
 
-  tags = {
-    Owner = "user"
-    Environment = "staging"
-  }
-
+  tags = var.vpc_tags
 }
 
-module "security-group" {
+data "aws_security_group" "default" {
+  name = "default"
+  vpc_id = module.vpc.vpc_id
+}
+
+module "ping_sg" {
   source  = "terraform-aws-modules/security-group/aws"
   version = "3.10.0"
   # insert the 2 required variables here
+
+  name = "Allow ping access"
+  vpc_id = module.vpc.vpc_id
+
+  ingress_with_cidr_blocks = [
+    {
+      from_port = 8
+      to_port = 0
+      protocol = "icmp"
+      cidr_blocks = "0.0.0.0/0"
+    }
+  ]
 }
+
+module "postgresql_sg" {
+  source  = "terraform-aws-modules/security-group/aws//modules/postgresql"
+  version = "~> 3.0"
+
+  name = "computed-postgres-sg"
+  vpc_id = module.vpc.vpc_id
+
+  ingress_cidr_blocks = ["0.0.0.0/0"]
+
+  computed_ingress_with_source_security_group_id = [
+    {
+        rule = "postgresql-tcp"
+        source_security_group_id = data.aws_security_group.default.id
+    }
+  ]
+
+  number_of_computed_ingress_with_source_security_group_id = 1
+}
+
+# module "rds" {
+#   source  = "terraform-aws-modules/rds/aws"
+#   version = "2.15.0"
+#   # insert the 11 required variables here
+# }
