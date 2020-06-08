@@ -96,6 +96,8 @@ module "rds" {
   allocated_storage = 20
   storage_encrypted = false
 
+  name="mydb"
+
   username = "postgres"
 
   password = "test-password"
